@@ -120,8 +120,8 @@ def get_client() -> OpenAI:
     return OpenAI(api_key=settings.openai_api_key or None, timeout=60, max_retries=1)
 
 
-def generate_deck(lesson_text: str) -> list[CardDraft]:
-    """Appelle le LLM (sortie structurée Pydantic) et renvoie les cartes valides."""
+def request_deck(lesson_text: str) -> Deck:
+    """Appel brut au LLM (sortie structurée Pydantic), avant tout nettoyage."""
     try:
         completion = get_client().chat.completions.parse(
             model=settings.llm_model,
@@ -138,7 +138,12 @@ def generate_deck(lesson_text: str) -> list[CardDraft]:
     deck = completion.choices[0].message.parsed
     if deck is None:
         raise GenerationError("Réponse vide ou refus du modèle")
-    return clean_deck(deck)
+    return deck
+
+
+def generate_deck(lesson_text: str) -> list[CardDraft]:
+    """Texte de la leçon → cartes valides, prêtes à enregistrer."""
+    return clean_deck(request_deck(lesson_text))
 
 
 PHOTO_PROMPT = """Cette photo montre une leçon (cahier, manuel ou fiche) d'un collégien.

@@ -1,0 +1,11 @@
+Le théorème de Pythagore
+
+Dans un triangle rectangle, le côté opposé à l'angle droit s'appelle l'hypoténuse. C'est le plus long côté du triangle.
+
+Le théorème de Pythagore : si un triangle est rectangle, alors le carré de la longueur de l'hypoténuse est égal à la somme des carrés des longueurs des deux autres côtés.
+Si ABC est rectangle en A, alors BC² = AB² + AC².
+
+On utilise ce théorème pour calculer la longueur d'un côté d'un triangle rectangle quand on connaît les deux autres.
+Exemple : si AB = 3 cm et AC = 4 cm, alors BC² = 9 + 16 = 25, donc BC = 5 cm.
+
+La réciproque du théorème de Pythagore permet de prouver qu'un triangle est rectangle : si le carré du plus long côté est égal à la somme des carrés des deux autres côtés, alors le triangle est rectangle.

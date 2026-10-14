@@ -1,0 +1,12 @@
+Les états de la matière et les changements d'état
+
+La matière peut exister sous trois états : solide, liquide et gazeux.
+Un solide a une forme propre et un volume propre. Un liquide n'a pas de forme propre : il prend la forme du récipient, mais il a un volume propre. Sa surface libre au repos est plane et horizontale. Un gaz n'a ni forme propre ni volume propre : il occupe tout l'espace disponible.
+
+Le passage d'un état à un autre s'appelle un changement d'état.
+- La fusion : passage de l'état solide à l'état liquide.
+- La solidification : passage de l'état liquide à l'état solide.
+- La vaporisation : passage de l'état liquide à l'état gazeux.
+- La liquéfaction : passage de l'état gazeux à l'état liquide.
+
+Pour l'eau pure, la fusion se fait à 0 °C et l'ébullition à 100 °C, sous pression normale. Pendant un changement d'état d'un corps pur, la température reste constante. Lors d'un changement d'état, la masse se conserve mais le volume peut changer : l'eau augmente de volume quand elle gèle.
