@@ -4,7 +4,11 @@ version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.143.1",
+    "openai>=3.31.0",
+    "pillow>=12.3.0",
     "pydantic-settings>=2.16.0",
+    "python-multipart>=0.0.32",
+    "sqlmodel>=0.0.48",
     "uvicorn[standard]>=0.54.0",
 ]
 
