@@ -1,0 +1,91 @@
+@import "tailwindcss";
+@import "./styles/tokens.css";
+
+/* Expose les tokens à Tailwind : bg-pen, text-muted, font-display, rounded-card… */
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-pen: var(--pen);
+  --color-highlight: var(--highlight);
+  --color-mint: var(--mint);
+  --color-coral: var(--coral);
+  --color-flame: var(--flame);
+  --color-lilac: var(--lilac);
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --radius-card: var(--radius);
+  --shadow-pop: var(--shadow);
+  --shadow-pop-lg: var(--shadow-lg);
+}
+
+@layer base {
+  html {
+    background: var(--paper);
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--paper);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 18px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    line-height: 1.15;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--pen);
+    outline-offset: 3px;
+  }
+}
+
+@layer utilities {
+  /* Mot-clé souligné au surligneur */
+  .surligne {
+    background: linear-gradient(transparent 55%, var(--highlight) 55%);
+    color: inherit;
+  }
+
+  /* En sombre, du texte clair sur demi-surligneur ressemble à un barré : on surligne tout le mot, texte foncé. */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .surligne {
+      background: var(--highlight);
+      color: #17172b;
+      border-radius: 4px;
+      padding-inline: 0.15em;
+    }
+  }
+
+  [data-theme="dark"] .surligne {
+    background: var(--highlight);
+    color: #17172b;
+    border-radius: 4px;
+    padding-inline: 0.15em;
+  }
+
+  .pop-border {
+    border: var(--border);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,43 @@
+/* Design system « Cahier Pop » : la seule source des couleurs, contours et ombres. */
+:root {
+  --paper: #f5f6fb; /* fond : feuille légèrement bleutée */
+  --surface: #ffffff; /* cartes */
+  --ink: #17172b; /* contours, ombres */
+  --text: #17172b; /* texte (devient clair en sombre) */
+  --muted: #5b5e78;
+  --pen: #3156f5; /* bleu stylo : action principale */
+  --highlight: #ffe14d; /* surligneur : mots-clés, indices */
+  --mint: #22c97a; /* juste */
+  --coral: #ff6b5b; /* faux */
+  --flame: #ff9a1f; /* série, XP */
+  --lilac: #a98bff; /* niveaux */
+  --border: 2.5px solid var(--ink);
+  --shadow: 0 4px 0 var(--ink);
+  --shadow-lg: 0 6px 0 var(--ink);
+  --radius: 16px;
+  --radius-pill: 999px;
+  --font-display: "Bricolage Grotesque", system-ui, sans-serif;
+  --font-body: "Lexend", system-ui, sans-serif;
+  color-scheme: light;
+}
+
+/* Sombre : suit le système, sauf si data-theme="light" force le clair. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #12131f;
+    --surface: #1d1f30;
+    --ink: #0a0a14;
+    --text: #ecedf7;
+    --muted: #a4a7c2;
+    color-scheme: dark;
+  }
+}
+
+[data-theme="dark"] {
+  --paper: #12131f;
+  --surface: #1d1f30;
+  --ink: #0a0a14;
+  --text: #ecedf7;
+  --muted: #a4a7c2;
+  color-scheme: dark;
+}
