@@ -26,7 +26,7 @@
   :root:not([data-theme="light"]) {
     --paper: #12131f;
     --surface: #1d1f30;
-    --ink: #0a0a14;
+    --ink: #4a4e73; /* plus clair que la spec (#0A0A14) : contours et ombres visibles sur fond sombre */
     --text: #ecedf7;
     --muted: #a4a7c2;
     color-scheme: dark;
@@ -36,7 +36,7 @@
 [data-theme="dark"] {
   --paper: #12131f;
   --surface: #1d1f30;
-  --ink: #0a0a14;
+  --ink: #4a4e73; /* plus clair que la spec (#0A0A14) : contours et ombres visibles sur fond sombre */
   --text: #ecedf7;
   --muted: #a4a7c2;
   color-scheme: dark;
