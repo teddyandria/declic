@@ -2,7 +2,8 @@ from fastapi import APIRouter, HTTPException, status
 from sqlmodel import col, select
 
 from app.auth import CurrentUser, SessionDep
-from app.models import Lesson, User
+from app.generate import GenerationError, generate_deck
+from app.models import Card, Lesson, User
 from app.schemas import CardRead, LessonCreate, LessonDetail, LessonSummary
 
 router = APIRouter(prefix="/lessons", tags=["lessons"])
@@ -55,3 +56,23 @@ def read_lesson(lesson_id: int, session: SessionDep, user: CurrentUser) -> Lesso
 def delete_lesson(lesson_id: int, session: SessionDep, user: CurrentUser) -> None:
     session.delete(get_owned_lesson(session, lesson_id, user))
     session.commit()
+
+
+@router.post("/{lesson_id}/generate")
+def generate_cards(lesson_id: int, session: SessionDep, user: CurrentUser) -> LessonDetail:
+    """Génère les cartes de la leçon. Remplace les cartes existantes (et leur progression)."""
+    lesson = get_owned_lesson(session, lesson_id, user)
+    try:
+        drafts = generate_deck(lesson.text)
+    except GenerationError:
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "La génération a raté. Réessaie dans un instant.")
+    if not drafts:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Pas assez d'infos dans cette leçon pour faire des cartes.")
+
+    for old in list(lesson.cards):
+        session.delete(old)
+    for draft in drafts:
+        session.add(Card(lesson_id=lesson.id, **draft.model_dump()))  # type: ignore[arg-type]
+    session.commit()
+    session.refresh(lesson)
+    return to_detail(lesson)

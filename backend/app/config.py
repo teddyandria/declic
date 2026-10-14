@@ -9,5 +9,9 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:5173"]
     database_url: str = "sqlite:///./declic.db"
 
+    openai_api_key: str = ""
+    llm_model: str = "gpt-4.1-mini"
+    llm_vision_model: str = "gpt-4.1-mini"
+
 
 settings = Settings()
