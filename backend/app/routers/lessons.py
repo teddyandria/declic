@@ -1,12 +1,14 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, UploadFile, status
 from sqlmodel import col, select
 
 from app.auth import CurrentUser, SessionDep
-from app.generate import GenerationError, generate_deck
+from app.generate import GenerationError, InvalidImageError, generate_deck, transcribe_photo
 from app.models import Card, Lesson, User
-from app.schemas import CardRead, LessonCreate, LessonDetail, LessonSummary
+from app.schemas import CardRead, LessonCreate, LessonDetail, LessonSummary, Transcription
 
 router = APIRouter(prefix="/lessons", tags=["lessons"])
+
+MAX_PHOTO_BYTES = 15 * 1024 * 1024
 
 
 def get_owned_lesson(session: SessionDep, lesson_id: int, user: User) -> Lesson:
@@ -76,3 +78,20 @@ def generate_cards(lesson_id: int, session: SessionDep, user: CurrentUser) -> Le
     session.commit()
     session.refresh(lesson)
     return to_detail(lesson)
+
+
+@router.post("/from-photo")
+def lesson_from_photo(photo: UploadFile, _: CurrentUser) -> Transcription:
+    """Photo → texte transcrit, que l'ado relit avant de créer la leçon. N'enregistre rien."""
+    data = photo.file.read(MAX_PHOTO_BYTES + 1)
+    if len(data) > MAX_PHOTO_BYTES:
+        raise HTTPException(status.HTTP_413_CONTENT_TOO_LARGE, "Photo trop lourde (15 Mo max).")
+    try:
+        text = transcribe_photo(data)
+    except InvalidImageError:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Ce fichier n'est pas une photo lisible.")
+    except GenerationError:
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY, "La lecture de la photo a raté. Réessaie.")
+    if not text:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, "Aucun texte lisible. Reprends la photo plus près.")
+    return Transcription(text=text)

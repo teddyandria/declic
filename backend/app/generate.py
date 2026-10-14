@@ -3,6 +3,8 @@
 Confidentialité : on n'envoie au LLM que le texte de la leçon, jamais le pseudo ni l'id.
 """
 
+import base64
+import io
 import logging
 import random
 import re
@@ -10,6 +12,7 @@ import unicodedata
 from typing import Literal
 
 from openai import OpenAI
+from PIL import Image, ImageOps, UnidentifiedImageError
 from pydantic import BaseModel
 
 from app.config import settings
@@ -20,6 +23,7 @@ MAX_QUESTION_WORDS = 15
 MAX_BLANK_WORDS = 2
 BLANK = "___"
 VRAI_FAUX = ("Vrai", "Faux")
+PHOTO_MAX_WIDTH = 1600
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +42,10 @@ class Deck(BaseModel):
 
 class GenerationError(Exception):
     """Le LLM n'a pas répondu ou a refusé."""
+
+
+class InvalidImageError(Exception):
+    """Le fichier envoyé n'est pas une image lisible."""
 
 
 DECK_PROMPT = f"""Tu crées des cartes de révision pour un collégien (11-15 ans) qui a un TDAH ou un trouble dys.
@@ -131,3 +139,51 @@ def generate_deck(lesson_text: str) -> list[CardDraft]:
     if deck is None:
         raise GenerationError("Réponse vide ou refus du modèle")
     return clean_deck(deck)
+
+
+PHOTO_PROMPT = """Cette photo montre une leçon (cahier, manuel ou fiche) d'un collégien.
+Transcris fidèlement tout le texte de la leçon, dans l'ordre de lecture, sans résumer ni reformuler.
+Garde les titres et les listes. Recolle les phrases coupées en fin de ligne du cahier. Ignore les gribouillages et les numéros de page.
+Si aucun texte n'est lisible, réponds uniquement : AUCUN_TEXTE"""
+
+
+def prepare_photo(data: bytes) -> bytes:
+    """Redresse la photo (EXIF), la réduit à 1600 px de large max et la ré-encode en JPEG.
+
+    Ré-encoder enlève aussi les métadonnées (position GPS du téléphone…) avant l'envoi au LLM.
+    """
+    try:
+        image = Image.open(io.BytesIO(data))
+        image = ImageOps.exif_transpose(image).convert("RGB")
+    except (UnidentifiedImageError, OSError) as error:
+        raise InvalidImageError from error
+    if image.width > PHOTO_MAX_WIDTH:
+        height = round(image.height * PHOTO_MAX_WIDTH / image.width)
+        image = image.resize((PHOTO_MAX_WIDTH, height), Image.Resampling.LANCZOS)
+    output = io.BytesIO()
+    image.save(output, format="JPEG", quality=85)
+    return output.getvalue()
+
+
+def transcribe_photo(data: bytes) -> str:
+    """Photo de leçon → texte. Renvoie "" si rien n'est lisible."""
+    jpeg = base64.b64encode(prepare_photo(data)).decode()
+    try:
+        completion = get_client().chat.completions.create(
+            model=settings.llm_vision_model,
+            temperature=0,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": PHOTO_PROMPT},
+                        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{jpeg}"}},
+                    ],
+                }
+            ],
+        )
+    except Exception as error:
+        raise GenerationError(str(error)) from error
+
+    text = (completion.choices[0].message.content or "").strip()
+    return "" if "AUCUN_TEXTE" in text else text

@@ -41,3 +41,7 @@ class CardUpdate(BaseModel):
     answer: str | None = Field(default=None, min_length=1, max_length=200)
     choices: list[str] | None = None
     explanation: str | None = Field(default=None, min_length=1, max_length=300)
+
+
+class Transcription(BaseModel):
+    text: str
