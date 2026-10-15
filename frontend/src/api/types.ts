@@ -61,8 +61,11 @@ export type FinishResult = Progress & {
   streak_extended: boolean
 }
 
+export type Token = { access_token: string; token_type: string }
+
 export type Me = Progress & {
   pseudo: string
+  created_at: string
   played_today: boolean
   lessons: LessonSummary[]
 }

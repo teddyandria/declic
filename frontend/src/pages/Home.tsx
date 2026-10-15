@@ -88,6 +88,10 @@ export function Home() {
         </section>
       )}
 
+      <Link to="/donnees" className="mt-auto min-h-12 self-center font-semibold text-muted underline underline-offset-4">
+        Tes données
+      </Link>
+
       {!loading && (
         <BottomBar>
           {dueCount > 0 ? (

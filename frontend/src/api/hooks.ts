@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import { apiFetch, apiUpload } from './client'
+import { setToken } from '../lib/token'
+import { apiFetch, apiPostForm, apiUpload } from './client'
 import type {
   CardData,
   CardUpdate,
@@ -10,6 +11,7 @@ import type {
   Me,
   ReviewResult,
   SessionCard,
+  Token,
 } from './types'
 
 export function useMe() {
@@ -119,4 +121,32 @@ export function useFinishSession() {
       void queryClient.invalidateQueries({ queryKey: ['lessons'] })
     },
   })
+}
+
+export function useLogin() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ pseudo, password }: { pseudo: string; password: string }) =>
+      apiPostForm<Token>('/auth/login', { username: pseudo, password }),
+    onSuccess: ({ access_token }) => {
+      queryClient.clear() // pas de données d'un compte précédent
+      setToken(access_token)
+    },
+  })
+}
+
+export function useRegister() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (body: { pseudo: string; password: string; consent: true }) =>
+      apiFetch<Token>('/auth/register', { method: 'POST', body: JSON.stringify(body) }),
+    onSuccess: ({ access_token }) => {
+      queryClient.clear()
+      setToken(access_token)
+    },
+  })
+}
+
+export function useDeleteAccount() {
+  return useMutation({ mutationFn: () => apiFetch<void>('/me', { method: 'DELETE' }) })
 }
