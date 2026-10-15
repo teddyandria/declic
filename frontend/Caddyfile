@@ -1,0 +1,20 @@
+# SITE_ADDRESS : « :80 » en local / derrière un hébergeur, ou un nom de domaine
+# sur un VPS (Caddy obtient alors le certificat HTTPS tout seul).
+{$SITE_ADDRESS::80} {
+	encode zstd gzip
+
+	# /api/... → l'API, sans le préfixe /api
+	handle_path /api/* {
+		reverse_proxy {$API_UPSTREAM:api:8000}
+	}
+
+	handle {
+		root * /srv
+		# Fichiers de build avec empreinte dans le nom : cache long
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		# Application monopage : toute route inconnue renvoie index.html
+		try_files {path} /index.html
+		file_server
+	}
+}

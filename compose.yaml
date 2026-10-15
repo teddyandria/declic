@@ -1,0 +1,40 @@
+# Déclic en local, comme en prod :
+#   docker compose up --build      → http://localhost:8080
+#   docker compose up -d db        → seulement Postgres (localhost:5433), pour le dev avec uvicorn --reload
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: declic
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-declic}
+      POSTGRES_DB: declic
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "127.0.0.1:${DB_PORT:-5433}:5432" # depuis ton Mac uniquement ; 5433 pour ne pas gêner un autre Postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U declic -d declic"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+  api:
+    build: ./backend
+    env_file: .env # OPENAI_API_KEY, JWT_SECRET…
+    environment:
+      # Prioritaire sur le DATABASE_URL du .env (qui pointe vers SQLite en dev)
+      DATABASE_URL: postgresql+psycopg://declic:${POSTGRES_PASSWORD:-declic}@db:5432/declic
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build: ./frontend
+    ports:
+      - "127.0.0.1:8080:80"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:

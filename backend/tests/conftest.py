@@ -7,10 +7,9 @@ from collections.abc import Callable, Iterator  # noqa: E402
 
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
-from sqlalchemy.pool import StaticPool  # noqa: E402
 from sqlmodel import Session, SQLModel, create_engine  # noqa: E402
 
-from app.db import get_session  # noqa: E402
+from app.db import get_session, make_engine  # noqa: E402
 from app.main import app  # noqa: E402
 from app.scheduler import utc_now  # noqa: E402
 from tests.helpers import Clock  # noqa: E402
@@ -18,13 +17,25 @@ from tests.helpers import Clock  # noqa: E402
 PASSWORD = "motdepasse123"
 
 
+# Par défaut : SQLite en mémoire (rapide). Pour rejouer la suite sur Postgres :
+#   TEST_DATABASE_URL=postgresql://declic:declic@localhost:5433/declic_test uv run pytest
+TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL")
+
+
 @pytest.fixture
 def session() -> Iterator[Session]:
-    """Base SQLite en mémoire, neuve pour chaque test."""
-    engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+    """Base neuve pour chaque test."""
+    if TEST_DATABASE_URL:
+        engine = make_engine(TEST_DATABASE_URL)
+        SQLModel.metadata.drop_all(engine)
+    else:
+        from sqlalchemy.pool import StaticPool
+
+        engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
     SQLModel.metadata.create_all(engine)
     with Session(engine) as session:
         yield session
+    engine.dispose()
 
 
 @pytest.fixture
