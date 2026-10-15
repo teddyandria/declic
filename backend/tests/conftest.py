@@ -1,14 +1,21 @@
-from collections.abc import Iterator
+import os
 
-import pytest
-from fastapi.testclient import TestClient
-from sqlalchemy.pool import StaticPool
-from sqlmodel import Session, SQLModel, create_engine
+# Avant d'importer l'app : la config exige un secret JWT.
+os.environ.setdefault("JWT_SECRET", "secret-de-test-assez-long-pour-pyjwt-0123456789")
 
-from app.db import get_session
-from app.main import app
-from app.scheduler import utc_now
-from tests.helpers import Clock
+from collections.abc import Callable, Iterator  # noqa: E402
+
+import pytest  # noqa: E402
+from fastapi.testclient import TestClient  # noqa: E402
+from sqlalchemy.pool import StaticPool  # noqa: E402
+from sqlmodel import Session, SQLModel, create_engine  # noqa: E402
+
+from app.db import get_session  # noqa: E402
+from app.main import app  # noqa: E402
+from app.scheduler import utc_now  # noqa: E402
+from tests.helpers import Clock  # noqa: E402
+
+PASSWORD = "motdepasse123"
 
 
 @pytest.fixture
@@ -21,14 +28,40 @@ def session() -> Iterator[Session]:
 
 
 @pytest.fixture
-def client(session: Session) -> Iterator[TestClient]:
+def anonymous(session: Session) -> Iterator[TestClient]:
+    """Client sans compte."""
     app.dependency_overrides[get_session] = lambda: session
     yield TestClient(app)
     app.dependency_overrides.clear()
 
 
 @pytest.fixture
-def clock(client: TestClient) -> Iterator[Clock]:
+def make_client(anonymous: TestClient) -> Callable[[str], TestClient]:
+    """Crée un compte et renvoie un client connecté avec ce compte."""
+
+    def make(pseudo: str) -> TestClient:
+        response = anonymous.post("/auth/register", json={"pseudo": pseudo, "password": PASSWORD, "consent": True})
+        assert response.status_code == 201, response.text
+        token = response.json()["access_token"]
+        return TestClient(app, headers={"Authorization": f"Bearer {token}"})
+
+    return make
+
+
+@pytest.fixture
+def client(make_client: Callable[[str], TestClient]) -> TestClient:
+    """Client connecté en tant qu'« alice »."""
+    return make_client("alice")
+
+
+@pytest.fixture
+def other_client(make_client: Callable[[str], TestClient]) -> TestClient:
+    """Client connecté en tant que « bob »."""
+    return make_client("bob")
+
+
+@pytest.fixture
+def clock(anonymous: TestClient) -> Iterator[Clock]:
     """Fige l'heure de l'API ; un test la fait avancer avec `clock.now = …`."""
     clock = Clock()
     app.dependency_overrides[utc_now] = lambda: clock.now

@@ -2,9 +2,23 @@
 
 from datetime import datetime
 
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 from app.models import CardType
+
+
+class RegisterBody(BaseModel):
+    pseudo: str = Field(min_length=3, max_length=20, pattern=r"^[A-Za-z0-9_-]+$")
+    password: str = Field(min_length=8, max_length=128)
+    # ≥ 15 ans, ou accord d'un parent (majorité numérique en France)
+    consent: Literal[True]
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
 
 
 class LessonCreate(BaseModel):
@@ -89,5 +103,6 @@ class FinishResult(Progress):
 
 class Me(Progress):
     pseudo: str
+    created_at: datetime
     played_today: bool
     lessons: list[LessonSummary]

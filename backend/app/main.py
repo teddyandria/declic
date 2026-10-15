@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app import auth
 from app.config import settings
 from app.db import create_db
 from app.routers import cards, lessons, me, session
@@ -25,6 +26,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router)
 app.include_router(lessons.router)
 app.include_router(cards.router)
 app.include_router(session.router)
