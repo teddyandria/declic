@@ -7,6 +7,8 @@ from sqlmodel import Session, SQLModel, create_engine
 
 from app.db import get_session
 from app.main import app
+from app.scheduler import utc_now
+from tests.helpers import Clock
 
 
 @pytest.fixture
@@ -23,3 +25,11 @@ def client(session: Session) -> Iterator[TestClient]:
     app.dependency_overrides[get_session] = lambda: session
     yield TestClient(app)
     app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def clock(client: TestClient) -> Iterator[Clock]:
+    """Fige l'heure de l'API ; un test la fait avancer avec `clock.now = …`."""
+    clock = Clock()
+    app.dependency_overrides[utc_now] = lambda: clock.now
+    yield clock

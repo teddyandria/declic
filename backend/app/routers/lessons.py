@@ -4,6 +4,7 @@ from sqlmodel import col, select
 from app.auth import CurrentUser, SessionDep
 from app.generate import GenerationError, InvalidImageError, generate_deck, transcribe_photo
 from app.models import Card, Lesson, User
+from app.scheduler import is_mastered
 from app.schemas import CardRead, LessonCreate, LessonDetail, LessonSummary, Transcription
 
 router = APIRouter(prefix="/lessons", tags=["lessons"])
@@ -19,25 +20,41 @@ def get_owned_lesson(session: SessionDep, lesson_id: int, user: User) -> Lesson:
     return lesson
 
 
+def mastered_count(lesson: Lesson) -> int:
+    return sum(is_mastered(card.fsrs_state) for card in lesson.cards)
+
+
+def to_summary(lesson: Lesson) -> LessonSummary:
+    return LessonSummary(
+        id=lesson.id,  # type: ignore[arg-type]
+        title=lesson.title,
+        created_at=lesson.created_at,
+        card_count=len(lesson.cards),
+        mastered=mastered_count(lesson),
+    )
+
+
+def list_user_lessons(session: SessionDep, user: User) -> list[LessonSummary]:
+    lessons = session.exec(
+        select(Lesson).where(Lesson.user_id == user.id).order_by(col(Lesson.created_at).desc())
+    ).all()
+    return [to_summary(lesson) for lesson in lessons]
+
+
 def to_detail(lesson: Lesson) -> LessonDetail:
     return LessonDetail(
         id=lesson.id,  # type: ignore[arg-type]
         title=lesson.title,
         text=lesson.text,
         created_at=lesson.created_at,
+        mastered=mastered_count(lesson),
         cards=[CardRead.model_validate(card, from_attributes=True) for card in lesson.cards],
     )
 
 
 @router.get("")
 def list_lessons(session: SessionDep, user: CurrentUser) -> list[LessonSummary]:
-    lessons = session.exec(
-        select(Lesson).where(Lesson.user_id == user.id).order_by(col(Lesson.created_at).desc())
-    ).all()
-    return [
-        LessonSummary(id=l.id, title=l.title, created_at=l.created_at, card_count=len(l.cards))  # type: ignore[arg-type]
-        for l in lessons
-    ]
+    return list_user_lessons(session, user)
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)

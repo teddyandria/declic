@@ -4,7 +4,9 @@ Une carte jamais révisée a `fsrs_state = None` : c'est une « nouvelle » cart
 """
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import Annotated, Any
+
+from fastapi import Depends
 
 from fsrs import Card as FsrsCard
 from fsrs import Rating, Scheduler, State
@@ -19,6 +21,9 @@ scheduler = Scheduler()
 def utc_now() -> datetime:
     """Dépendance FastAPI : les tests la remplacent pour faire avancer le temps."""
     return datetime.now(UTC)
+
+
+NowDep = Annotated[datetime, Depends(utc_now)]
 
 
 def review(fsrs_state: dict[str, Any] | None, correct: bool, now: datetime) -> dict[str, Any]:

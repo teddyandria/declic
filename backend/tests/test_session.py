@@ -1,36 +1,10 @@
-from collections.abc import Iterator
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 
-import pytest
 from fastapi.testclient import TestClient
 from sqlmodel import Session
 
-from app.main import app
 from app.models import Card, Lesson, User
-from app.scheduler import utc_now
-
-T0 = datetime(2026, 10, 15, 18, 0, tzinfo=UTC)
-
-
-class Clock:
-    def __init__(self) -> None:
-        self.now = T0
-
-
-@pytest.fixture
-def clock(client: TestClient) -> Iterator[Clock]:
-    clock = Clock()
-    app.dependency_overrides[utc_now] = lambda: clock.now
-    yield clock
-
-
-def make_lesson(client: TestClient, session: Session, n_cards: int) -> int:
-    lesson_id: int = client.post("/lessons", json={"title": "Volcans", "text": "Un volcan crache de la lave."}).json()["id"]
-    for i in range(n_cards):
-        session.add(Card(lesson_id=lesson_id, type="trou", question=f"Question {i} ___", answer=f"Réponse {i}",
-                         explanation=f"Explication {i}"))
-    session.commit()
-    return lesson_id
+from tests.helpers import T0, Clock, make_lesson
 
 
 def test_session_ne_renvoie_jamais_la_reponse(client: TestClient, session: Session, clock: Clock) -> None:
@@ -52,7 +26,7 @@ def test_correction_normalisee(client: TestClient, session: Session, clock: Cloc
     make_lesson(client, session, 1)
     card_id = client.get("/session").json()[0]["id"]
     result = client.post("/reviews", json={"card_id": card_id, "answer": "  REPONSE 0 "}).json()
-    assert result == {"correct": True, "answer": "Réponse 0", "explanation": "Explication 0"}
+    assert result == {"correct": True, "answer": "Réponse 0", "explanation": "Explication 0", "xp_gained": 10}
 
 
 def test_mauvaise_reponse_renvoie_la_bonne(client: TestClient, session: Session, clock: Clock) -> None:

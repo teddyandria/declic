@@ -17,6 +17,7 @@ class LessonSummary(BaseModel):
     title: str
     created_at: datetime
     card_count: int
+    mastered: int  # cartes en état FSRS « Review »
 
 
 class CardRead(BaseModel):
@@ -33,6 +34,7 @@ class LessonDetail(BaseModel):
     title: str
     text: str
     created_at: datetime
+    mastered: int
     cards: list[CardRead]
 
 
@@ -66,3 +68,26 @@ class ReviewResult(BaseModel):
     correct: bool
     answer: str
     explanation: str
+    xp_gained: int
+
+
+class Progress(BaseModel):
+    """XP, niveau et série : ce qu'on affiche en gommettes."""
+
+    xp: int
+    level: int
+    xp_into_level: int
+    xp_for_next: int
+    streak: int
+
+
+class FinishResult(Progress):
+    xp_gained: int
+    level_up: bool
+    streak_extended: bool
+
+
+class Me(Progress):
+    pseudo: str
+    played_today: bool
+    lessons: list[LessonSummary]
