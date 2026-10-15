@@ -1,22 +1,13 @@
-from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app import auth
 from app.config import settings
-from app.db import create_db
 from app.routers import cards, lessons, me, session
 
 
-@asynccontextmanager
-async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    create_db()
-    yield
-
-
-app = FastAPI(title="Déclic API", lifespan=lifespan)
+# Les tables sont créées et modifiées par Alembic (uv run alembic upgrade head), plus au démarrage.
+app = FastAPI(title="Déclic API")
 
 app.add_middleware(
     CORSMiddleware,

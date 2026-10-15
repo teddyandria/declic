@@ -1,7 +1,7 @@
 from collections.abc import Iterator
 
 from sqlalchemy import Engine
-from sqlmodel import Session, SQLModel, create_engine
+from sqlmodel import Session, create_engine
 
 from app.config import settings
 
@@ -23,10 +23,6 @@ def make_engine(url: str) -> Engine:
 
 
 engine = make_engine(settings.database_url)
-
-
-def create_db() -> None:
-    SQLModel.metadata.create_all(engine)
 
 
 def get_session() -> Iterator[Session]:

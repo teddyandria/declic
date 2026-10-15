@@ -15,10 +15,12 @@ COPY pyproject.toml uv.lock .python-version ./
 RUN uv sync --locked --no-dev --no-install-project
 
 COPY app ./app
+COPY alembic.ini ./
+COPY migrations ./migrations
 
 RUN useradd --create-home --uid 1000 declic
 USER declic
 
 EXPOSE 8000
-# PORT est fourni par certains hébergeurs (Railway…) ; 8000 sinon.
-CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips='*'"]
+# Au démarrage : migrations, puis l'API. PORT est fourni par certains hébergeurs (Railway…) ; 8000 sinon.
+CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips='*'"]

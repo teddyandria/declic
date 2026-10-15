@@ -7,7 +7,8 @@ Appli de révision gamifiée pour ados TDAH ou dys : photo ou texte de la leçon
 ```bash
 cp .env.example .env            # puis remplir OPENAI_API_KEY et JWT_SECRET
 
-cd backend && uv sync && uv run uvicorn app.main:app --reload   # http://localhost:8000/docs
+cd backend && uv sync && uv run alembic upgrade head          # crée / met à jour les tables
+uv run uvicorn app.main:app --reload                            # http://localhost:8000/docs
 cd frontend && npm install && npm run dev                       # http://localhost:5173
 ```
 
@@ -18,6 +19,16 @@ docker compose up --build       # http://localhost:8080 (Caddy → front + /api 
 docker compose up -d db         # seulement Postgres, sur localhost:5433
 docker compose down             # arrêter (ajouter -v pour effacer la base)
 ```
+
+## Modifier le schéma de la base
+
+```bash
+# après un changement dans backend/app/models.py :
+cd backend && uv run alembic revision --autogenerate -m "ajout de …"   # relire le fichier généré !
+uv run alembic upgrade head
+```
+
+En Docker et en prod, `alembic upgrade head` est lancé automatiquement au démarrage de l'API.
 
 ## Tests
 
