@@ -12,7 +12,7 @@ services:
       - pgdata:/var/lib/postgresql/data
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
     ports:
-      - "127.0.0.1:${DB_PORT:-5433}:5432" # depuis ton Mac uniquement ; 5433 pour ne pas gêner un autre Postgres
+      - "127.0.0.1:${DB_PORT:-5433}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U declic -d declic"]
       interval: 2s
