@@ -7,6 +7,8 @@ import './index.css'
 import { AddLesson } from './pages/AddLesson'
 import { Home } from './pages/Home'
 import { Lesson } from './pages/Lesson'
+import { Session } from './pages/Session'
+import { SessionEnd } from './pages/SessionEnd'
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: 1 } },
@@ -20,6 +22,8 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/" element={<Home />} />
           <Route path="/ajouter" element={<AddLesson />} />
           <Route path="/lecons/:id" element={<Lesson />} />
+          <Route path="/seance" element={<Session />} />
+          <Route path="/fin" element={<SessionEnd />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
