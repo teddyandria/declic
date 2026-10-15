@@ -4,7 +4,7 @@ Fonctions pures (pas de base de données) pour être faciles à tester.
 """
 
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 XP_CORRECT = 10
@@ -43,7 +43,12 @@ def level_info(xp: int) -> LevelInfo:
 
 
 def paris_today(now: datetime) -> date:
-    """Le jour de l'ado, à Paris (pas en UTC) : 00h30 à Paris compte pour le nouveau jour."""
+    """Le jour de l'ado, à Paris (pas en UTC) : 00h30 à Paris compte pour le nouveau jour.
+
+    Une date sans fuseau (SQLite les renvoie ainsi) est en UTC : c'est ce qu'on enregistre.
+    """
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=UTC)
     return now.astimezone(PARIS).date()
 
 

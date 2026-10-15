@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { setToken } from '../lib/token'
 import { apiFetch, apiPostForm, apiUpload } from './client'
 import type {
+  AdminStats,
   CardData,
   CardUpdate,
   FinishResult,
@@ -149,4 +150,12 @@ export function useRegister() {
 
 export function useDeleteAccount() {
   return useMutation({ mutationFn: () => apiFetch<void>('/me', { method: 'DELETE' }) })
+}
+
+export function useAdminStats() {
+  return useQuery({
+    queryKey: ['admin', 'stats'],
+    queryFn: () => apiFetch<AdminStats>('/admin/stats?weeks=4'),
+    retry: false,
+  })
 }

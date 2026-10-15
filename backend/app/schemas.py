@@ -1,6 +1,6 @@
 """Formats d'entrée/sortie de l'API (distincts des tables pour ne jamais exposer user_id ou fsrs_state)."""
 
-from datetime import datetime
+from datetime import date, datetime
 
 from typing import Literal
 
@@ -106,3 +106,25 @@ class Me(Progress):
     created_at: datetime
     played_today: bool
     lessons: list[LessonSummary]
+
+
+class WeekStats(BaseModel):
+    week_start: date  # lundi, heure de Paris
+    registered: int  # comptes existant à la fin de la semaine
+    active: int  # au moins une séance
+    sessions: int
+    sessions_per_active: float
+    pct_3plus: float  # part des comptes inscrits ayant fait ≥ 3 séances (critère du MVP)
+
+
+class UserStats(BaseModel):
+    pseudo: str
+    created_at: datetime
+    sessions_total: int
+    sessions_this_week: int
+    last_session: datetime | None
+
+
+class AdminStats(BaseModel):
+    weeks: list[WeekStats]  # de la plus récente à la plus ancienne
+    users: list[UserStats]

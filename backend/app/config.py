@@ -18,6 +18,12 @@ class Settings(BaseSettings):
     jwt_secret: str = Field(min_length=32)  # obligatoire : pas de valeur par défaut devinable
     jwt_expire_days: int = 30
 
+    # Pseudos autorisés sur /admin/stats, séparés par des virgules (ex. « teddy,lea »)
+    admin_pseudos: str = ""
+
+    def is_admin(self, pseudo: str) -> bool:
+        return pseudo.lower() in {p.strip().lower() for p in self.admin_pseudos.split(",") if p.strip()}
+
     openai_api_key: str = ""
     llm_model: str = "gpt-4.1-mini"
     llm_vision_model: str = "gpt-4.1-mini"

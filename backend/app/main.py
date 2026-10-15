@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app import auth
 from app.config import settings
-from app.routers import cards, lessons, me, session
+from app.routers import admin, cards, lessons, me, session
 
 
 # Les tables sont créées et modifiées par Alembic (uv run alembic upgrade head), plus au démarrage.
@@ -22,6 +22,7 @@ app.include_router(lessons.router)
 app.include_router(cards.router)
 app.include_router(session.router)
 app.include_router(me.router)
+app.include_router(admin.router)
 
 
 @app.get("/health")

@@ -6,6 +6,7 @@ import { BrowserRouter, Route, Routes } from 'react-router'
 import './index.css'
 import { RequireAuth } from './components/RequireAuth'
 import { AddLesson } from './pages/AddLesson'
+import { Admin } from './pages/Admin'
 import { Data } from './pages/Data'
 import { Home } from './pages/Home'
 import { Lesson } from './pages/Lesson'
@@ -31,6 +32,7 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/seance" element={<RequireAuth><Session /></RequireAuth>} />
           <Route path="/fin" element={<RequireAuth><SessionEnd /></RequireAuth>} />
           <Route path="/donnees" element={<RequireAuth><Data /></RequireAuth>} />
+          <Route path="/admin" element={<RequireAuth><Admin /></RequireAuth>} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

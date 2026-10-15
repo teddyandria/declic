@@ -69,3 +69,22 @@ export type Me = Progress & {
   played_today: boolean
   lessons: LessonSummary[]
 }
+
+export type WeekStats = {
+  week_start: string
+  registered: number
+  active: number
+  sessions: number
+  sessions_per_active: number
+  pct_3plus: number
+}
+
+export type UserStats = {
+  pseudo: string
+  created_at: string
+  sessions_total: number
+  sessions_this_week: number
+  last_session: string | null
+}
+
+export type AdminStats = { weeks: WeekStats[]; users: UserStats[] }
