@@ -4,9 +4,13 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router'
 
 import './index.css'
+import { AddLesson } from './pages/AddLesson'
 import { Home } from './pages/Home'
+import { Lesson } from './pages/Lesson'
 
-const queryClient = new QueryClient()
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: 1 } },
+})
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -14,6 +18,8 @@ createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/ajouter" element={<AddLesson />} />
+          <Route path="/lecons/:id" element={<Lesson />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

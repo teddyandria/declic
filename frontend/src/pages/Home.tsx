@@ -1,73 +1,91 @@
-import { Check, Flame, PlugZap, Sparkles, Star, X } from 'lucide-react'
-import { useState } from 'react'
+import { ChevronRight, Plus } from 'lucide-react'
+import { Link, useNavigate } from 'react-router'
 
-import { useHealth } from '../api/hooks'
+import { useLessons, useSessionPreview } from '../api/hooks'
+import { BottomBar } from '../components/ui/BottomBar'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
-import { Chip } from '../components/ui/Chip'
-import { ProgressBar } from '../components/ui/ProgressBar'
-import { Sheet } from '../components/ui/Sheet'
+import { ErrorNote } from '../components/ui/ErrorNote'
+import { Page } from '../components/ui/Page'
 
-/** Phase 1 : vérifie la connexion à l'API et montre les composants « Cahier Pop ». */
 export function Home() {
-  const health = useHealth()
-  const [sheetOpen, setSheetOpen] = useState(false)
-  const connected = health.data?.status === 'ok'
+  const navigate = useNavigate()
+  const lessons = useLessons()
+  const preview = useSessionPreview()
+
+  const dueCount = preview.data?.length ?? 0
+  const hasLessons = (lessons.data?.length ?? 0) > 0
+  const loading = lessons.isPending || preview.isPending
 
   return (
-    <main className="mx-auto flex min-h-dvh max-w-lg flex-col gap-6 px-4 py-8">
-      <header className="flex items-center justify-between">
+    <Page withBottomBar>
+      <header>
         <h1 className="text-4xl">Déclic</h1>
-        <Chip tone="flame" tilt={-3} icon={<Flame size={18} strokeWidth={2.5} />}>
-          3 j
-        </Chip>
       </header>
 
-      <Card className="flex items-center gap-4">
-        <span
-          className={`pop-border flex size-12 shrink-0 items-center justify-center rounded-full text-[#17172B] ${
-            health.isPending ? 'bg-highlight' : connected ? 'bg-mint' : 'bg-coral'
-          }`}
-        >
-          {health.isPending ? (
-            <PlugZap strokeWidth={2.5} />
-          ) : connected ? (
-            <Check strokeWidth={2.5} />
+      {lessons.error && <ErrorNote message={lessons.error.message} />}
+
+      {!loading && (
+        <Card>
+          {dueCount > 0 ? (
+            <>
+              <p className="font-display text-3xl font-extrabold tabular-nums">
+                {dueCount} carte{dueCount > 1 ? 's' : ''} t'attend{dueCount > 1 ? 'ent' : ''}
+              </p>
+              <p className="text-muted">5 minutes. Pas plus.</p>
+            </>
+          ) : hasLessons ? (
+            <>
+              <p className="font-display text-3xl font-extrabold">Rien à réviser.</p>
+              <p className="text-muted">Ton cerveau a quartier libre. Reviens demain.</p>
+            </>
           ) : (
-            <X strokeWidth={2.5} />
+            <>
+              <p className="font-display text-3xl font-extrabold">Ajoute ta leçon.</p>
+              <p className="text-muted">Photo ou texte. Je fais les questions.</p>
+            </>
           )}
-        </span>
-        <p className="font-display text-2xl font-extrabold" role="status">
-          {health.isPending ? 'Connexion…' : connected ? 'API connectée' : 'API injoignable'}
-        </p>
-      </Card>
+        </Card>
+      )}
 
-      <p>
-        Révise ta leçon en <mark className="surligne">5 minutes</mark>. Pas plus.
-      </p>
+      {hasLessons && (
+        <section className="flex flex-col gap-3">
+          <h2 className="text-2xl">Tes leçons</h2>
+          {lessons.data?.map((lesson) => (
+            <Link
+              key={lesson.id}
+              to={`/lecons/${lesson.id}`}
+              className="pop-border flex min-h-16 items-center gap-3 rounded-card bg-surface px-4 py-3 shadow-pop transition-[translate,box-shadow] duration-100 active:translate-y-1 active:shadow-none"
+            >
+              <span className="flex-1">
+                <span className="block font-semibold">{lesson.title}</span>
+                <span className="text-base text-muted tabular-nums">
+                  {lesson.card_count} carte{lesson.card_count > 1 ? 's' : ''}
+                </span>
+              </span>
+              <ChevronRight strokeWidth={2.5} aria-hidden />
+            </Link>
+          ))}
+          {dueCount > 0 && (
+            <Link
+              to="/ajouter"
+              className="flex min-h-14 items-center justify-center gap-2 rounded-card border-[2.5px] border-dashed border-muted font-semibold text-muted"
+            >
+              <Plus strokeWidth={2.5} aria-hidden /> Ajouter une leçon
+            </Link>
+          )}
+        </section>
+      )}
 
-      <div className="flex flex-wrap gap-3">
-        <Chip tone="highlight" tilt={2} icon={<Sparkles size={18} strokeWidth={2.5} />}>
-          120 XP
-        </Chip>
-        <Chip tone="lilac" tilt={-2} icon={<Star size={18} strokeWidth={2.5} />}>
-          Niveau 2
-        </Chip>
-      </div>
-
-      <ProgressBar value={3} max={10} label="Carte 3 sur 10" />
-
-      <div className="mt-auto">
-        <Button onClick={() => setSheetOpen(true)}>Tester le feedback</Button>
-      </div>
-
-      <Sheet open={sheetOpen}>
-        <p className="flex items-center gap-2 font-display text-2xl font-extrabold">
-          <Check className="text-mint" strokeWidth={3} /> Juste !
-        </p>
-        <p className="text-muted">C'est le style Cahier Pop. Contours épais, ombres nettes.</p>
-        <Button onClick={() => setSheetOpen(false)}>Continuer</Button>
-      </Sheet>
-    </main>
+      {!loading && (
+        <BottomBar>
+          {dueCount > 0 ? (
+            <Button onClick={() => navigate('/seance')}>Réviser</Button>
+          ) : (
+            <Button onClick={() => navigate('/ajouter')}>Ajouter une leçon</Button>
+          )}
+        </BottomBar>
+      )}
+    </Page>
   )
 }
