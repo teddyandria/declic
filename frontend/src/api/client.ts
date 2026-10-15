@@ -31,7 +31,12 @@ async function request<T>(path: string, init: RequestInit): Promise<T> {
   if (!response.ok) {
     const body: unknown = await response.json().catch(() => null)
     const detail = (body as { detail?: unknown } | null)?.detail
-    throw new ApiError(response.status, typeof detail === 'string' ? detail : 'Un truc a planté. Réessaie.')
+    if (typeof detail === 'string') throw new ApiError(response.status, detail)
+    // 502/503/504 : l'API est arrêtée ou injoignable (en dev, le proxy Vite répond à sa place).
+    if (response.status >= 502 && response.status <= 504) {
+      throw new ApiError(response.status, 'Le serveur ne répond pas. Réessaie dans un instant.')
+    }
+    throw new ApiError(response.status, 'Un truc a planté côté serveur. Réessaie.')
   }
   if (response.status === 204) return undefined as T
   return (await response.json()) as T

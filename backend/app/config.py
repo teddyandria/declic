@@ -1,11 +1,16 @@
+from pathlib import Path
+
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+BACKEND_DIR = Path(__file__).resolve().parents[1]
 
 
 class Settings(BaseSettings):
     """Réglages lus depuis l'environnement ou le fichier .env (racine du dépôt ou backend/)."""
 
-    model_config = SettingsConfigDict(env_file=("../.env", ".env"), extra="ignore")
+    # Chemins absolus : le .env est trouvé quel que soit le dossier d'où on lance l'API.
+    model_config = SettingsConfigDict(env_file=(BACKEND_DIR.parent / ".env", BACKEND_DIR / ".env"), extra="ignore")
 
     cors_origins: list[str] = ["http://localhost:5173"]
     database_url: str = "sqlite:///./declic.db"
