@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
 from app.db import get_session
@@ -11,12 +12,17 @@ LOCAL_PSEUDO = "local"
 
 def current_user(session: Annotated[Session, Depends(get_session)]) -> User:
     """Provisoire jusqu'à la phase 6 (JWT) : tout le monde est l'utilisateur « local »."""
-    user = session.exec(select(User).where(User.pseudo == LOCAL_PSEUDO)).first()
+    query = select(User).where(User.pseudo == LOCAL_PSEUDO)
+    user = session.exec(query).first()
     if user is None:
-        user = User(pseudo=LOCAL_PSEUDO, password_hash="!")
-        session.add(user)
-        session.commit()
-        session.refresh(user)
+        try:
+            user = User(pseudo=LOCAL_PSEUDO, password_hash="!")
+            session.add(user)
+            session.commit()
+            session.refresh(user)
+        except IntegrityError:  # une requête parallèle l'a créé juste avant nous
+            session.rollback()
+            user = session.exec(query).one()
     return user
 
 
