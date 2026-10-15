@@ -45,3 +45,24 @@ class CardUpdate(BaseModel):
 
 class Transcription(BaseModel):
     text: str
+
+
+class SessionCard(BaseModel):
+    """Ce que voit l'ado pendant la séance : jamais la réponse ni l'explication."""
+
+    id: int
+    type: CardType
+    question: str
+    choices: list[str]
+    lesson_title: str
+
+
+class ReviewCreate(BaseModel):
+    card_id: int
+    answer: str = Field(max_length=200)
+
+
+class ReviewResult(BaseModel):
+    correct: bool
+    answer: str
+    explanation: str
