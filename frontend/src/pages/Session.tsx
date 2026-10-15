@@ -1,11 +1,10 @@
-import { useQueryClient } from '@tanstack/react-query'
 import { LoaderCircle, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { useNavigate, useSearchParams } from 'react-router'
 
-import { useReview, useSessionCards } from '../api/hooks'
-import type { ReviewResult } from '../api/types'
+import { useFinishSession, useReview, useSessionCards } from '../api/hooks'
+import type { FinishResult, ReviewResult } from '../api/types'
 import { Feedback } from '../components/quiz/Feedback'
 import { ListenButton } from '../components/quiz/ListenButton'
 import { Qcm } from '../components/quiz/Qcm'
@@ -23,19 +22,21 @@ import { ProgressBar } from '../components/ui/ProgressBar'
 import { Sheet } from '../components/ui/Sheet'
 import { stopSpeaking } from '../lib/speech'
 
-export type SessionSummary = { correct: number; total: number }
+/** Passé à l'écran de fin. `finish` est null si l'appel de fin a raté (on affiche quand même le résumé). */
+export type SessionSummary = { correct: number; total: number; xp: number; finish: FinishResult | null }
 
 export function Session() {
   const navigate = useNavigate()
-  const queryClient = useQueryClient()
   const lessonParam = useSearchParams()[0].get('lecon')
   const cards = useSessionCards(lessonParam ? Number(lessonParam) : null)
   const review = useReview()
+  const finishSession = useFinishSession()
 
   const [index, setIndex] = useState(0)
   const [answer, setAnswer] = useState('')
   const [result, setResult] = useState<ReviewResult | null>(null)
   const [correctCount, setCorrectCount] = useState(0)
+  const [sessionXp, setSessionXp] = useState(0)
 
   useEffect(() => stopSpeaking, [index]) // coupe la voix en changeant de carte ou en quittant
 
@@ -79,17 +80,22 @@ export function Session() {
       {
         onSuccess: (res) => {
           setResult(res)
+          setSessionXp((xp) => xp + res.xp_gained)
           if (res.correct) setCorrectCount((n) => n + 1)
         },
       },
     )
   }
 
-  function next() {
+  async function next() {
     if (isLast) {
-      void queryClient.invalidateQueries({ queryKey: ['session'] })
-      void queryClient.invalidateQueries({ queryKey: ['lessons'] })
-      const summary: SessionSummary = { correct: correctCount, total }
+      const finish = await finishSession.mutateAsync().catch(() => null)
+      const summary: SessionSummary = {
+        correct: correctCount,
+        total,
+        xp: sessionXp + (finish?.xp_gained ?? 0),
+        finish,
+      }
       navigate('/fin', { replace: true, state: summary })
       return
     }
@@ -136,7 +142,7 @@ export function Session() {
       )}
 
       <Sheet open={result !== null} delay={result?.correct === false ? 0.15 : 0}>
-        {result && <Feedback result={result} seed={card.id} isLast={isLast} onContinue={next} />}
+        {result && <Feedback result={result} seed={card.id} isLast={isLast} onContinue={() => void next()} />}
       </Sheet>
     </Page>
   )

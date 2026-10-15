@@ -1,7 +1,8 @@
-import { Check, X } from 'lucide-react'
+import { Check, Sparkles, X } from 'lucide-react'
 
 import type { ReviewResult } from '../../api/types'
 import { Button } from '../ui/Button'
+import { Chip } from '../ui/Chip'
 
 const RIGHT = ['Juste.', 'Exact.', 'Carré.', 'Bien vu.', 'Propre.']
 const WRONG = ['Pas cette fois.', 'Raté. Ça arrive.', 'Presque.', 'Non. Tu l’auras la prochaine.']
@@ -26,7 +27,10 @@ export function Feedback({ result, seed, isLast, onContinue }: FeedbackProps) {
         >
           {result.correct ? <Check strokeWidth={3} /> : <X strokeWidth={3} />}
         </span>
-        {phrases[seed % phrases.length]}
+        <span className="flex-1">{phrases[seed % phrases.length]}</span>
+        <Chip tone="flame" tilt={3} icon={<Sparkles size={18} strokeWidth={2.5} aria-hidden />}>
+          +{result.xp_gained} XP
+        </Chip>
       </p>
       {!result.correct && (
         <p className="text-xl">

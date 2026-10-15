@@ -1,7 +1,9 @@
 import { ChevronRight, Plus } from 'lucide-react'
 import { Link, useNavigate } from 'react-router'
 
-import { useLessons, useSessionPreview } from '../api/hooks'
+import { useLessons, useMe, useSessionPreview } from '../api/hooks'
+import { MasteryBar } from '../components/MasteryBar'
+import { LevelSticker, StreakSticker } from '../components/Stickers'
 import { BottomBar } from '../components/ui/BottomBar'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
@@ -12,6 +14,7 @@ export function Home() {
   const navigate = useNavigate()
   const lessons = useLessons()
   const preview = useSessionPreview()
+  const me = useMe()
 
   const dueCount = preview.data?.length ?? 0
   const hasLessons = (lessons.data?.length ?? 0) > 0
@@ -19,8 +22,14 @@ export function Home() {
 
   return (
     <Page withBottomBar>
-      <header>
-        <h1 className="text-4xl">Déclic</h1>
+      <header className="flex items-center gap-3">
+        <h1 className="flex-1 text-4xl">Déclic</h1>
+        {me.data && (
+          <>
+            <StreakSticker streak={me.data.streak} />
+            <LevelSticker level={me.data.level} />
+          </>
+        )}
       </header>
 
       {lessons.error && <ErrorNote message={lessons.error.message} />}
@@ -57,11 +66,13 @@ export function Home() {
               to={`/lecons/${lesson.id}`}
               className="pop-border flex min-h-16 items-center gap-3 rounded-card bg-surface px-4 py-3 shadow-pop transition-[translate,box-shadow] duration-100 active:translate-y-1 active:shadow-none"
             >
-              <span className="flex-1">
-                <span className="block font-semibold">{lesson.title}</span>
-                <span className="text-base text-muted tabular-nums">
-                  {lesson.card_count} carte{lesson.card_count > 1 ? 's' : ''}
-                </span>
+              <span className="flex flex-1 flex-col gap-2">
+                <span className="font-semibold">{lesson.title}</span>
+                {lesson.card_count > 0 ? (
+                  <MasteryBar mastered={lesson.mastered} total={lesson.card_count} />
+                ) : (
+                  <span className="text-base text-muted">Pas encore de questions</span>
+                )}
               </span>
               <ChevronRight strokeWidth={2.5} aria-hidden />
             </Link>

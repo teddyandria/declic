@@ -1,7 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { apiFetch, apiUpload } from './client'
-import type { CardData, CardUpdate, LessonDetail, LessonSummary, ReviewResult, SessionCard } from './types'
+import type {
+  CardData,
+  CardUpdate,
+  FinishResult,
+  LessonDetail,
+  LessonSummary,
+  Me,
+  ReviewResult,
+  SessionCard,
+} from './types'
+
+export function useMe() {
+  return useQuery({ queryKey: ['me'], queryFn: () => apiFetch<Me>('/me') })
+}
 
 export function useLessons() {
   return useQuery({ queryKey: ['lessons'], queryFn: () => apiFetch<LessonSummary[]>('/lessons') })
@@ -93,5 +106,17 @@ export function useReview() {
   return useMutation({
     mutationFn: (body: { card_id: number; answer: string }) =>
       apiFetch<ReviewResult>('/reviews', { method: 'POST', body: JSON.stringify(body) }),
+  })
+}
+
+export function useFinishSession() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: () => apiFetch<FinishResult>('/session/finish', { method: 'POST' }),
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ['me'] })
+      void queryClient.invalidateQueries({ queryKey: ['session'] })
+      void queryClient.invalidateQueries({ queryKey: ['lessons'] })
+    },
   })
 }

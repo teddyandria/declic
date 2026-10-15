@@ -7,6 +7,8 @@ export type LessonSummary = {
   title: string
   created_at: string
   card_count: number
+  /** Cartes maîtrisées (état FSRS « Review ») */
+  mastered: number
 }
 
 export type CardData = {
@@ -23,6 +25,7 @@ export type LessonDetail = {
   title: string
   text: string
   created_at: string
+  mastered: number
   cards: CardData[]
 }
 
@@ -41,4 +44,25 @@ export type ReviewResult = {
   correct: boolean
   answer: string
   explanation: string
+  xp_gained: number
+}
+
+export type Progress = {
+  xp: number
+  level: number
+  xp_into_level: number
+  xp_for_next: number
+  streak: number
+}
+
+export type FinishResult = Progress & {
+  xp_gained: number
+  level_up: boolean
+  streak_extended: boolean
+}
+
+export type Me = Progress & {
+  pseudo: string
+  played_today: boolean
+  lessons: LessonSummary[]
 }

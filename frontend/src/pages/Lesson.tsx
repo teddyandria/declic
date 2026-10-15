@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router'
 import { useDeleteCard, useDeleteLesson, useGenerateCards, useLesson, useUpdateCard } from '../api/hooks'
 import type { CardData, CardType } from '../api/types'
 import { CardEditor } from '../components/CardEditor'
+import { MasteryBar } from '../components/MasteryBar'
 import { BottomBar } from '../components/ui/BottomBar'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
@@ -73,6 +74,12 @@ export function Lesson() {
       </header>
 
       {confirmDelete === 'lesson' && <p className="font-semibold">Sûr ? Appuie encore pour supprimer.</p>}
+      {cards.length > 0 && (
+        <section className="flex flex-col gap-2">
+          <h2 className="text-base font-semibold text-muted">Maîtrise</h2>
+          <MasteryBar mastered={lesson.data.mastered} total={cards.length} />
+        </section>
+      )}
       {generate.error && <ErrorNote message={generate.error.message} />}
 
       {cards.length === 0 && !generate.isPending && (
