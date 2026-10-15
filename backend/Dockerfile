@@ -23,4 +23,5 @@ USER declic
 
 EXPOSE 8000
 # Au démarrage : migrations, puis l'API. PORT est fourni par certains hébergeurs (Railway…) ; 8000 sinon.
-CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips='*'"]
+# HOST : 0.0.0.0 (IPv4) par défaut ; « :: » sur Railway, dont le réseau privé passe par IPv6.
+CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host ${HOST:-0.0.0.0} --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips='*'"]
